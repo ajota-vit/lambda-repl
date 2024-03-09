@@ -10,10 +10,12 @@ typedef enum {
 typedef union Term {
     Kind kind;
     struct {
+        Kind kind;
         const char* symbol;
         union Term* id;
     } var;
     struct {
+        Kind kind;
         const char* symbol;
         union Term* body;
     } lam;
@@ -35,5 +37,11 @@ typedef struct Env {
     const char* symbol;
     Term* term;
 } Env;
+
+Term* term_var(const char* symbol, Term* id);
+Term* term_lam(const char* symbol, Term* body);
+Term* term_app(Term* left, Term* right);
+void bind_term(Term* term, Env* env);
+void print_term(Term* term);
 
 #endif

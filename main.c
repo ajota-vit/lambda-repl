@@ -7,7 +7,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-const char* slurp(const char* path) {
+char* slurp(const char* path) {
     FILE* file = fopen(path, "r");
     if (file == NULL) {
         fprintf(stderr, "TODO: 1");
@@ -30,11 +30,7 @@ const char* slurp(const char* path) {
     return buffer;
 }
 
-void repl(void) {
-    Env* env = NULL;
-    int strong = 1;
-    int strict = 1;
-
+void repl(Env* env, int strong, int strict) {
     using_history();
     stifle_history(1024);
 
@@ -42,17 +38,28 @@ void repl(void) {
         char* line = readline("[λ]: ");
         if (line == NULL) break;
         add_history(line);
+
+        Lexer lexer = create_lexer(line);
+        Term* term = parse_line(&lexer, &env, &strong, &strict);
+        if (term != NULL) {
+            print_term(term);
+        }
     }
 
     clear_history();
 }
 
 int main(int argc, char* argv[]) {
+    Env* env = NULL;
+
     for (int i = 1; i < argc; i++) {
-        printf(slurp(argv[i]));
+        char* source = slurp(argv[i]);
+        Lexer lexer = create_lexer(source);
+        parse_definition_list(&lexer, &env);
+        free(source);
     }
 
-    repl();
+    repl(env, 1, 1);
 
     return 0;
 }
