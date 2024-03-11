@@ -183,5 +183,5 @@ Term* parse_line(Lexer* lexer, Env** env, int* strong, int* strict) {
     new->term = term;
     *env = new;
     
-    return term;
+    return NULL;
 }

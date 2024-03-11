@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "eval.h"
 #include "parse.h"
@@ -14,11 +15,11 @@ char* slurp(const char* path) {
         exit(1);
     }
 
-    char* buffer = malloc(4096);
-    size_t capacity = 4096;
+    char* buffer = malloc(1 << 16);
+    size_t capacity = 1 << 16;
     size_t length = 0;
     do {
-        capacity *= 2;
+        capacity += 1 << 16;
         buffer = realloc(buffer, capacity);
         length += fread(&buffer[length], 1, capacity - length, file);
     } while (length == capacity);
@@ -42,8 +43,19 @@ void repl(Env* env, int strong, int strict) {
         Lexer lexer = create_lexer(line);
         Term* term = parse_line(&lexer, &env, &strong, &strict);
         if (term != NULL) {
+            size_t count = 0;
+            clock_t start = clock();
+            term = eval_term(term, NULL, env, 1, strong, strict, &count);
+            clock_t end = clock();
+
+            printf("|> time:       %lfs\n", (double)(end - start) / (double)CLOCKS_PER_SEC);
+            printf("|> reductions: %zu\n", count);
+            printf("|> term:       ");
             print_term(term);
+            free_term(term);
         }
+
+        free(line);
     }
 
     clear_history();
@@ -60,6 +72,14 @@ int main(int argc, char* argv[]) {
     }
 
     repl(env, 1, 1);
+
+    while (env != NULL) {
+        Env* next = env->next;
+        free_term(env->term);
+        free(env);
+
+        env = next;
+    }
 
     return 0;
 }

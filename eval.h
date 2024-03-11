@@ -41,7 +41,9 @@ typedef struct Env {
 Term* term_var(const char* symbol, Term* id);
 Term* term_lam(const char* symbol, Term* body);
 Term* term_app(Term* left, Term* right);
-void bind_term(Term* term, Env* env);
+void free_term(Term* term);
 void print_term(Term* term);
+void bind_term(Term* term, Env* env);
+Term* eval_term(Term* term, Map* map, Env* env, int eval, int strong, int strict, size_t* count);
 
 #endif

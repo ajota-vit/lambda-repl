@@ -28,6 +28,39 @@ Term* term_app(Term* left, Term* right) {
     return term;
 }
 
+void free_term(Term* term) {
+    if (term->kind == LAM) {
+        free_term(body(term));
+    } else if (term->kind == APP) {
+        free_term(left(term));
+        free_term(right(term));
+    }
+    free(term);
+}
+
+Term* copy_term(Term* term, Map* map) {
+    if (term->kind == VAR) {
+        while (map != NULL) {
+            if (map->key == id(term)) return term_var(symbol(term), map->term);
+            map = map->next;
+        }
+
+        return term_var(symbol(term), id(term));
+    } else if (term->kind == LAM) {
+        Term* lam = term_lam(symbol(term), NULL);
+        Map new = {map, term, lam};
+        body(lam) = copy_term(body(term), &new);
+        return lam;
+    } else if (term->kind == APP) {
+        return term_app(
+            copy_term(left(term), map),
+            copy_term(right(term), map)
+        );
+    }
+
+    return NULL;
+}
+
 void print_term_impl(Term* term, Env* env, int lam_braces, int app_braces) {
 	if (term->kind == VAR) {
         size_t count = 0;
@@ -86,5 +119,51 @@ void bind_term(Term* term, Env* env) {
     } else if (term->kind == APP) {
         bind_term(left(term), env);
         bind_term(right(term), env);
+    }
+}
+
+Term* eval_term(Term* term, Map* map, Env* env, int eval, int strong, int strict, size_t* count) {
+    for (;;) {
+        if (term->kind == VAR) {
+            Map* current = map;
+            while (current != NULL) {
+                if (current->key == id(term)) {
+                    free_term(term);
+                    term = copy_term(current->term, NULL);
+                    break;
+                }
+
+                current = current->next;
+            }
+        }
+
+        while (term->kind == VAR && id(term) == NULL) {
+            Env* current = env;
+            while (current != NULL && strcmp(current->symbol, symbol(term)) != 0) {
+                current = current->next;
+            }
+            if (current == NULL) {
+                break;
+            }
+            free_term(term);
+            term = copy_term(current->term, NULL);
+        }
+
+        if (term->kind == LAM) body(term) = eval_term(body(term), map, env, eval && strong, strong, strict, count);
+        if (term->kind != APP) return term;
+
+        left(term) = eval_term(left(term), map, env, eval, strong, strict, count);
+        right(term) = eval_term(right(term), map, env, eval && strict, strong, strict, count);
+        if (!eval || left(term)->kind != LAM) return term;
+
+        Map new = {map, left(term), right(term)};
+        Term* temp = eval_term(body(left(term)), &new, env, 1, strong, strict, count);
+        *count += 1;
+
+        free_term(right(term));
+        free(left(term));
+        free(term);
+
+        term = temp;
     }
 }

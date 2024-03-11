@@ -1,2 +1,3 @@
 True = \x.\y.x
 False = \x.\y.y
+Two = \f.\x.f (f x)
