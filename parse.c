@@ -50,7 +50,7 @@ int peek_symbol(Lexer* lexer, const char* symbol) {
     return 1;
 }
 
-const char* parse_symbol(Lexer* lexer) {
+char* parse_symbol(Lexer* lexer) {
     parse_whitespace(lexer);
     if (!isalpha(*lexer->current)) return NULL;
 
@@ -73,7 +73,7 @@ Term* parse_term(Lexer* lexer);
 Term* parse_lam(Lexer* lexer) {
     assert(next_symbol(lexer, "\\"));
 
-    const char* parm = parse_symbol(lexer);
+    char* parm = parse_symbol(lexer);
     assert(parm != NULL);
 
     assert(next_symbol(lexer, "."));
@@ -98,7 +98,7 @@ Term* parse_term(Lexer* lexer) {
         } else if (peek_symbol(lexer, "\\")) {
             node = parse_lam(lexer);
         } else {
-            const char* symbol = parse_symbol(lexer);
+            char* symbol = parse_symbol(lexer);
             if (symbol != NULL) {
                 node = term_var(symbol, NULL);
             }
@@ -117,7 +117,7 @@ Term* parse_term(Lexer* lexer) {
 
 void parse_definition_list(Lexer* lexer, Env** env) {
     while (!parse_eof(lexer)) {
-        const char* symbol = parse_symbol(lexer);
+        char* symbol = parse_symbol(lexer);
         assert(next_symbol(lexer, "="));
         Term* term = parse_term(lexer);
         assert(term != NULL);
@@ -151,7 +151,7 @@ Term* parse_line(Lexer* lexer, Env** env, int* strong, int* strict) {
         }
     }
 
-    const char* symbol = parse_symbol(lexer);
+    char* symbol = parse_symbol(lexer);
     if (symbol == NULL) {
         Term* term = parse_term(lexer);
         if (term != NULL) bind_term(term, NULL);

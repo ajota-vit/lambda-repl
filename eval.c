@@ -10,13 +10,20 @@
 #define left(T) ((T)->app.left)
 #define right(T) ((T)->app.right)
 
-Term* term_var(const char* symbol, Term* id) {
+char* copy_string(const char* string) {
+    size_t len = strlen(string);
+    char* copy = malloc(len+1);
+    memcpy(copy, string, len+1);
+    return copy;
+}
+
+Term* term_var(char* symbol, Term* id) {
     Term* term = malloc(sizeof(Term));
     *term = (Term){.var = {VAR, symbol, id}};
     return term;
 }
 
-Term* term_lam(const char* symbol, Term* body) {
+Term* term_lam(char* symbol, Term* body) {
     Term* term = malloc(sizeof(Term));
     *term = (Term){.lam = {LAM, symbol, body}};
     return term;
@@ -29,7 +36,10 @@ Term* term_app(Term* left, Term* right) {
 }
 
 void free_term(Term* term) {
-    if (term->kind == LAM) {
+    if (term->kind == VAR) {
+        free(symbol(term));
+    } else if (term->kind == LAM) {
+        free(symbol(term));
         free_term(body(term));
     } else if (term->kind == APP) {
         free_term(left(term));
@@ -41,13 +51,13 @@ void free_term(Term* term) {
 Term* copy_term(Term* term, Map* map) {
     if (term->kind == VAR) {
         while (map != NULL) {
-            if (map->key == id(term)) return term_var(symbol(term), map->term);
+            if (map->key == id(term)) return term_var(copy_string(symbol(term)), map->term);
             map = map->next;
         }
 
-        return term_var(symbol(term), id(term));
+        return term_var(copy_string(symbol(term)), id(term));
     } else if (term->kind == LAM) {
-        Term* lam = term_lam(symbol(term), NULL);
+        Term* lam = term_lam(copy_string(symbol(term)), NULL);
         Map new = {map, term, lam};
         body(lam) = copy_term(body(term), &new);
         return lam;
@@ -124,6 +134,7 @@ void bind_term(Term* term, Env* env) {
 
 Term* eval_term(Term* term, Map* map, Env* env, int eval, int strong, int strict, size_t* count) {
     for (;;) {
+
         if (term->kind == VAR) {
             Map* current = map;
             while (current != NULL) {
@@ -155,15 +166,18 @@ Term* eval_term(Term* term, Map* map, Env* env, int eval, int strong, int strict
         left(term) = eval_term(left(term), map, env, eval, strong, strict, count);
         right(term) = eval_term(right(term), map, env, eval && strict, strong, strict, count);
         if (!eval || left(term)->kind != LAM) return term;
-
-        Map new = {map, left(term), right(term)};
-        Term* temp = eval_term(body(left(term)), &new, env, 1, strong, strict, count);
         *count += 1;
 
+        Map new = {map, left(term), right(term)};
+        Term* temp = eval_term(body(left(term)), &new, env, 0, strong, strict, count);
+
         free_term(right(term));
+        free(symbol(left(term)));
         free(left(term));
         free(term);
 
         term = temp;
     }
+
+    return term;
 }

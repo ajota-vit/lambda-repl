@@ -4,6 +4,7 @@
 #include "eval.h"
 
 typedef struct {
+    const char* source;
     const char* current;
 } Lexer;
 

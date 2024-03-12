@@ -11,12 +11,12 @@ typedef union Term {
     Kind kind;
     struct {
         Kind kind;
-        const char* symbol;
+        char* symbol;
         union Term* id;
     } var;
     struct {
         Kind kind;
-        const char* symbol;
+        char* symbol;
         union Term* body;
     } lam;
     struct {
@@ -34,12 +34,12 @@ typedef struct Map {
 
 typedef struct Env {
     struct Env* next;
-    const char* symbol;
+    char* symbol;
     Term* term;
 } Env;
 
-Term* term_var(const char* symbol, Term* id);
-Term* term_lam(const char* symbol, Term* body);
+Term* term_var(char* symbol, Term* id);
+Term* term_lam(char* symbol, Term* body);
 Term* term_app(Term* left, Term* right);
 void free_term(Term* term);
 void print_term(Term* term);
