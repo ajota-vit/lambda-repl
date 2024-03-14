@@ -3,7 +3,7 @@
 ```
 $ ./lambda-repl
 [λ]: Two = \f.\x.f (f x)
-[λ]:
+[λ]: Two Two
 |> reductions: 5
 |> time:       0.000069s 
 |> term:       λx. λx'. x (x (x (x x')))
