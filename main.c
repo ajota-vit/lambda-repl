@@ -40,7 +40,7 @@ void repl(Env* env, int strong, int strict) {
         if (line == NULL) break;
         add_history(line);
 
-        Lexer lexer = create_lexer(line);
+        Lexer lexer = create_lexer(line, "<stdin>");
         Term* term = parse_line(&lexer, &env, &strong, &strict);
         if (term != NULL) {
             size_t count = 0;
@@ -68,7 +68,7 @@ void test_repl(Env* env, int strong, int strict) {
         fgets(line, 256, stdin);
         if (*line == '\0') break;
 
-        Lexer lexer = create_lexer(line);
+        Lexer lexer = create_lexer(line, "<stdin>");
         Term* term = parse_line(&lexer, &env, &strong, &strict);
         if (term != NULL) {
             size_t count = 0;
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 1; i < argc; i++) {
         char* source = slurp(argv[i]);
-        Lexer lexer = create_lexer(source);
+        Lexer lexer = create_lexer(source, argv[i]);
         parse_definition_list(&lexer, &env);
         free(source);
     }
