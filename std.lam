@@ -1,4 +1,33 @@
+Id = \x.x
+
 True = \x.\y.x
 False = \x.\y.y
-Two = \f.\x.f (f x)
-Id = \x.x
+
+And = \x.\y.x y False
+Or = \x.\y.x True y
+Not = \x.x False True
+
+Zero =  \f.\x.x
+One =   \f.\x.f x
+Two =   \f.\x.f (f x)
+Three = \f.\x.f (f (f x))
+Four =  \f.\x.f (f (f (f x)))
+Five =  \f.\x.f (f (f (f (f x))))
+Six =   \f.\x.f (f (f (f (f (f x)))))
+Seven = \f.\x.f (f (f (f (f (f (f x))))))
+Eight = \f.\x.f (f (f (f (f (f (f (f x)))))))
+Nine =  \f.\x.f (f (f (f (f (f (f (f (f x))))))))
+
+Succ = \n.\f.\x.f (n f x)
+Plus = \m.\n.\f.\x. m f (n f x)
+Mult = \m.\n.\f.m (n f)
+Pow = \m.\n.n m
+Pred = \n.\f.\x.n (\g.\h.h (g f)) (\u.x) (\u.u)
+
+IsZero = \n.n (\_.False) True
+
+Pair = \x.\y.\f.f x y
+First = \p.p True
+Second = \p.p False
+Nil = \x.True
+Null = \p.p (\x.\y.False)
