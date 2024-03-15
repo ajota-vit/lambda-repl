@@ -70,7 +70,7 @@ int peek_symbol(Lexer* lexer, const char* symbol) {
 
 char* parse_symbol(Lexer* lexer) {
     parse_whitespace(lexer);
-    if (!isalpha(*lexer->current)) return NULL;
+    if (!isalpha(*lexer->current) && *lexer->current != '_') return NULL;
 
     size_t len = 0;
     while (isalnum(lexer->current[len]) || lexer->current[len] == '_') {
@@ -227,6 +227,7 @@ Term* parse_line(Lexer* lexer, Env** env, int* strong, int* strict) {
         }
     }
 
+    const char* backup = lexer->current; // this needs to be improved
     char* symbol = parse_symbol(lexer);
     if (symbol == NULL) {
         Term* term = parse_term(lexer);
@@ -242,12 +243,9 @@ Term* parse_line(Lexer* lexer, Env** env, int* strong, int* strict) {
     }
 
     if (!peek_symbol(lexer, "=")) {
+        lexer->current = backup;
         Term* term = parse_term(lexer);
-        if (term != NULL) {
-            term = term_app(term_var(symbol, NULL), term);
-        } else {
-            term = term_var(symbol, NULL);
-        }
+        if (term == NULL) return NULL;
         bind_term(term, NULL);
         if (parse_newline(lexer) == 0) {
             free_term(term);
